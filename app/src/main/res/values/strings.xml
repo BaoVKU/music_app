@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">MusicApp</string>
+    <string name="repeat">Repeat</string>
+    <string name="play">Play</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+    <string name="shuffle">Shuffle</string>
+    <string name="timer">Timer</string>
+    <string name="share">Share</string>
+    <string name="like">Like</string>
+    <string name="favorite">Favorite</string>
+</resources>
