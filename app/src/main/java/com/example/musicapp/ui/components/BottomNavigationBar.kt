@@ -1,5 +1,7 @@
 package com.example.musicapp.ui.components
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -8,11 +10,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import com.example.musicapp.R
-import com.example.musicapp.ui.navigation.DownloadDestination
 import com.example.musicapp.ui.navigation.FavoriteDestination
 import com.example.musicapp.ui.navigation.HomeDestination
 import com.example.musicapp.ui.navigation.NavigationDestination
 import com.example.musicapp.ui.navigation.PlaylistDestination
+import com.example.musicapp.ui.navigation.SearchDestination
 
 @Composable
 fun BottomNavigationBar(
@@ -72,16 +74,16 @@ fun BottomNavigationBar(
             }
         )
         NavigationBarItem(
-            selected = (currentDestination is DownloadDestination),
-            onClick = { onNavigate(DownloadDestination) },
+            selected = (currentDestination is SearchDestination),
+            onClick = { onNavigate(SearchDestination) },
             icon = {
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_download),
-                    contentDescription = "download_icon"
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "search_icon"
                 )
             },
             label = {
-                Text(text = "Download")
+                Text(text = "Search")
             })
     }
 }

@@ -57,45 +57,40 @@ fun TopBar(
             }
         },
         actions = {
-            if(hasActions){
-                Row {
-                    IconButton(onClick = { onNavigate(SearchDestination) }) {
-                        Icon(imageVector = Icons.Filled.Search, contentDescription = "search_icon")
+            if (hasActions) {
+                Column {
+                    IconButton(onClick = {
+                        isAccountMenuExpanded = !isAccountMenuExpanded
+                    }) {
+                        Icon(
+                            imageVector = Icons.Filled.AccountCircle,
+                            contentDescription = "account_icon"
+                        )
                     }
-                    Column {
-                        IconButton(onClick = {
-                            isAccountMenuExpanded = !isAccountMenuExpanded
-                        }) {
-                            Icon(
-                                imageVector = Icons.Filled.AccountCircle,
-                                contentDescription = "account_icon"
-                            )
-                        }
-                        DropdownMenu(
-                            expanded = isAccountMenuExpanded,
-                            onDismissRequest = { isAccountMenuExpanded = false }) {
-                            DropdownMenuItem(text = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.ic_logout),
-                                        contentDescription = "logout_icon",
-                                        tint = MaterialTheme.colorScheme.error
-                                    )
-                                    Text(
-                                        text = "Logout",
-                                        color = MaterialTheme.colorScheme.error,
+                    DropdownMenu(
+                        expanded = isAccountMenuExpanded,
+                        onDismissRequest = { isAccountMenuExpanded = false }) {
+                        DropdownMenuItem(text = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_logout),
+                                    contentDescription = "logout_icon",
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                                Text(
+                                    text = "Logout",
+                                    color = MaterialTheme.colorScheme.error,
 
-                                        modifier = Modifier.padding(start = 8.dp)
-                                    )
-                                }
-                            }, onClick = {
-                                topBarViewModel.logout(context = context)
-                                isAccountMenuExpanded = false
-                                onNavigate(LoginDestination)
-                            })
-                        }
-
+                                    modifier = Modifier.padding(start = 8.dp)
+                                )
+                            }
+                        }, onClick = {
+                            topBarViewModel.logout(context = context)
+                            isAccountMenuExpanded = false
+                            onNavigate(LoginDestination)
+                        })
                     }
+
                 }
             }
         }, modifier = modifier

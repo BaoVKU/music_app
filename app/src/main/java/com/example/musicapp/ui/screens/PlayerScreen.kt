@@ -51,6 +51,7 @@ import com.example.musicapp.R
 import com.example.musicapp.model.Song
 import com.example.musicapp.ui.components.MinimizedPlayer
 import com.example.musicapp.ui.viewmodels.AudioUrisUiState
+import com.example.musicapp.ui.viewmodels.FavoriteViewModel
 import com.example.musicapp.ui.viewmodels.PlayerViewModel
 import com.example.musicapp.ui.viewmodels.SongListUiState
 import com.example.musicapp.ui.viewmodels.SongUiState
@@ -63,9 +64,10 @@ import kotlinx.coroutines.delay
 fun PlayerScreen(
     modifier: Modifier = Modifier,
     songQuery: String,
-    playerViewModel: PlayerViewModel = viewModel()
+    playerViewModel: PlayerViewModel = viewModel(),
+    favoriteViewModel: FavoriteViewModel = viewModel()
 ) {
-    LaunchedEffect(songQuery){
+    LaunchedEffect(songQuery) {
         playerViewModel.initPlayer(songQuery)
     }
 
@@ -81,7 +83,7 @@ fun PlayerScreen(
         mutableStateOf(Song())
     }
 
-    var playlist by remember {
+    var playlist by remember(songQuery) {
         mutableStateOf(listOf<Song>())
     }
 
@@ -122,26 +124,24 @@ fun PlayerScreen(
     }
 
     if (initialAudioUri != Uri.EMPTY) {
-
         val player = remember(initialAudioUri) {
             ExoPlayer.Builder(context).build().apply {
-                repeatMode = Player.REPEAT_MODE_ALL
+                repeatMode = Player.REPEAT_MODE_OFF
                 shuffleModeEnabled = false
                 setMediaItem(MediaItem.fromUri(initialAudioUri))
                 prepare()
-                play()
             }
         }
 
         if (audioUrisUiState is AudioUrisUiState.Success) {
             val startIndex = audioUris.indexOfFirst { it.first == currentSong.id }
+            player.repeatMode = Player.REPEAT_MODE_ALL
             player.setMediaItems(
                 audioUris.map { MediaItem.fromUri(it.second) },
                 startIndex,
                 0L
             )
             player.prepare()
-            player.play()
             playerViewModel.setAudioUrisUiStateToLoading()
         }
 
@@ -170,9 +170,11 @@ fun PlayerScreen(
                     reason: Int
                 ) {
                     super.onMediaItemTransition(mediaItem, reason)
-                    currentSong = playlist[player.currentMediaItemIndex]
-                    storageRef.child(currentSong.thumbnail!!).downloadUrl.addOnSuccessListener {
-                        thumbnailUri = it
+                    if (player.mediaItemCount > 1) {
+                        currentSong = playlist[player.currentMediaItemIndex]
+                        storageRef.child(currentSong.thumbnail!!).downloadUrl.addOnSuccessListener {
+                            thumbnailUri = it
+                        }
                     }
                 }
             }
@@ -194,28 +196,30 @@ fun PlayerScreen(
             }
         }
 
-        if(isMinimized){
+        if (isMinimized) {
             if (thumbnailUri != Uri.EMPTY) {
-            MinimizedPlayer(
-                context = context,
-                thumbnail = thumbnailUri,
-                songName = currentSong.name ?: "",
-                songArtists = currentSong.artists?.joinToString(", ") ?: "",
-                isAudioPlaying = isAudioPlaying,
-                player = player,
-                position = (playbackPosition.toFloat()/duration.toFloat()),
-                modifier = modifier.clickable { isMinimized = false }
-            )
+                MinimizedPlayer(
+                    context = context,
+                    thumbnail = thumbnailUri,
+                    songName = currentSong.name ?: "",
+                    songArtists = currentSong.artists?.joinToString(", ") ?: "",
+                    isAudioPlaying = isAudioPlaying,
+                    player = player,
+                    position = (playbackPosition.toFloat() / duration.toFloat()),
+                    modifier = modifier.clickable { isMinimized = false }
+                )
             }
-        }
-        else{
+        } else {
             Scaffold(
                 topBar = {
                     TopAppBar(
                         title = { },
                         navigationIcon = {
                             IconButton(onClick = { isMinimized = true }) {
-                                Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = "minimize_icon")
+                                Icon(
+                                    imageVector = Icons.Default.KeyboardArrowDown,
+                                    contentDescription = "minimize_icon"
+                                )
                             }
                         }
                     )
@@ -232,7 +236,8 @@ fun PlayerScreen(
                     if (thumbnailUri != Uri.EMPTY) {
                         AsyncImage(
                             model = ImageRequest.Builder(context).data(thumbnailUri).crossfade(true)
-                                .build(), contentDescription = "thumbnail",
+                                .build(),
+                            contentDescription = "thumbnail",
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .size(360.dp)
@@ -240,7 +245,9 @@ fun PlayerScreen(
                         )
                     }
 
-                    PlayerHeader(currentSong)
+                    PlayerHeader(song = currentSong, onFavoriteClick = {
+                        favoriteViewModel.toggleFavorite("songs", it)
+                    })
 
                     ExpandedAudioTrack(
                         duration = duration,
@@ -252,12 +259,16 @@ fun PlayerScreen(
                 }
             }
         }
+
     }
 
 }
 
 @Composable
-fun PlayerHeader(song: Song, modifier: Modifier = Modifier) {
+fun PlayerHeader(song: Song, onFavoriteClick: (String) -> Unit, modifier: Modifier = Modifier) {
+    var isFavorite by remember {
+        mutableStateOf(song.isFavorite)
+    }
     Row(
         modifier = modifier
             .fillMaxWidth(),
@@ -278,11 +289,14 @@ fun PlayerHeader(song: Song, modifier: Modifier = Modifier) {
                 overflow = TextOverflow.Ellipsis,
             )
         }
-        IconButton(onClick = { }) {
+        IconButton(onClick = {
+            isFavorite = !isFavorite
+            onFavoriteClick(song.id)
+        }) {
             Icon(
-                painter = painterResource(id = if (song.isFavorite) R.drawable.ic_favorite_filled else R.drawable.ic_favorite_outlined),
+                painter = painterResource(id = if (isFavorite) R.drawable.ic_favorite_filled else R.drawable.ic_favorite_outlined),
                 contentDescription = "favorite_con",
-                tint = if (song.isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground,
+                tint = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.size(48.dp),
             )
         }
@@ -331,14 +345,18 @@ fun ExpandedAudioControl(
         modifier = modifier.fillMaxWidth()
     ) {
         IconButton(onClick = {
-            if (player.repeatMode == Player.REPEAT_MODE_ALL) player.repeatMode =
-                Player.REPEAT_MODE_ONE
-            else player.repeatMode = Player.REPEAT_MODE_ALL
+            if (player.repeatMode == Player.REPEAT_MODE_ONE) {
+                if (player.mediaItemCount > 1)
+                    player.repeatMode = Player.REPEAT_MODE_ALL
+                else
+                    player.repeatMode = Player.REPEAT_MODE_OFF
+            } else
+                player.repeatMode = Player.REPEAT_MODE_ONE
         }) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_repeat),
                 contentDescription = stringResource(id = R.string.repeat),
-                tint = if (player.repeatMode == Player.REPEAT_MODE_ALL) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.primary,
+                tint = if (player.repeatMode == Player.REPEAT_MODE_ONE) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.size(32.dp)
             )
         }
@@ -380,11 +398,14 @@ fun ExpandedAudioControl(
                 modifier = Modifier.size(40.dp)
             )
         }
-        IconButton(onClick = { player.shuffleModeEnabled = !player.shuffleModeEnabled }) {
+        IconButton(
+            enabled = player.mediaItemCount > 1,
+            onClick = { player.shuffleModeEnabled = !player.shuffleModeEnabled }
+        ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_shuffle),
                 contentDescription = stringResource(id = R.string.shuffle),
-                tint = if (player.shuffleModeEnabled) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.primary,
+                tint = if (player.shuffleModeEnabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.size(32.dp)
             )
         }

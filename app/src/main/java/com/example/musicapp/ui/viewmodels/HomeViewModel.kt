@@ -57,7 +57,7 @@ class HomeViewModel : ViewModel() {
     private fun getSongs(database: FirebaseFirestore){
         _songListUiState.value = SongListUiState.Loading
         database.collection("songs")
-            .limit(3)
+            .limit(5)
             .get()
             .addOnSuccessListener { result ->
                 val songs = result.map { document ->
@@ -75,6 +75,7 @@ class HomeViewModel : ViewModel() {
     private fun getAlbums(database: FirebaseFirestore){
         _albumListUiState.value = AlbumListUiState.Loading
         database.collection("albums")
+            .limit(5)
             .get()
             .addOnSuccessListener { result ->
                 val albums = result.map { document ->
@@ -92,6 +93,7 @@ class HomeViewModel : ViewModel() {
     private fun getConcerts(database: FirebaseFirestore){
         _concertListUiState.value = ConcertListUiState.Loading
         database.collection("concerts")
+            .limit(5)
             .get()
             .addOnSuccessListener { result ->
                 val concerts = result.map { document ->

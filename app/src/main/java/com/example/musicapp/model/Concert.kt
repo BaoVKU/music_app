@@ -11,5 +11,5 @@ data class Concert(
     val capacity: Int? = null,
     val ticket: Int? = null,
     val description: String? = null,
-    val artist: List<String>? = null,
+    val artists: List<String>? = null,
 )

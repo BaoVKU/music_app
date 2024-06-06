@@ -1,6 +1,10 @@
 package com.example.musicapp.ui.components
 
+import android.app.DownloadManager
+import android.content.Context
 import android.net.Uri
+import android.os.Environment
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -33,11 +37,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.musicapp.R
 import com.example.musicapp.model.Song
 import com.example.musicapp.ui.navigation.NavigationDestination
+import com.example.musicapp.ui.viewmodels.FavoriteViewModel
 import com.google.firebase.Firebase
 import com.google.firebase.storage.storage
 
@@ -45,13 +51,12 @@ import com.google.firebase.storage.storage
 fun SongItem(
     modifier: Modifier = Modifier,
     song: Song,
-    isDownloaded: Boolean = false,
     isInPlaylistScreen: Boolean = false,
     onSongQueryChanged: (String) -> Unit,
     onFavoriteClick: () -> Unit = {},
     onAddToPlaylistClick: () -> Unit = {},
     onRemoveFromPlaylistClick: () -> Unit = {},
-    onDownloadClick: () -> Unit = {}
+    favoriteViewModel: FavoriteViewModel = viewModel()
 ) {
     val context = LocalContext.current
 
@@ -61,8 +66,9 @@ fun SongItem(
         mutableStateOf<Uri>(Uri.EMPTY)
     }
 
-    val favoriteIconId =
-        if (song.isFavorite) R.drawable.ic_favorite_filled else R.drawable.ic_favorite_outlined
+    var isFavorite by remember {
+        mutableStateOf(song.isFavorite)
+    }
 
     Firebase.storage.reference.child(song.thumbnail!!).downloadUrl.addOnSuccessListener {
         thumbnailUri = it
@@ -74,12 +80,13 @@ fun SongItem(
             .fillMaxWidth()
             .height(64.dp)
             .padding(8.dp)
-            .clickable { onSongQueryChanged("song=" + song.id + "&playlist=Kw8GJwWsFCRGn3ad9dgJ") }
+            .clickable { onSongQueryChanged("song=" + song.id) }
     ) {
-        if(thumbnailUri != Uri.EMPTY){
+        if (thumbnailUri != Uri.EMPTY) {
             Box(modifier = Modifier.size(48.dp)) {
                 AsyncImage(
-                    model = ImageRequest.Builder(context).data(thumbnailUri).crossfade(true).build(),
+                    model = ImageRequest.Builder(context).data(thumbnailUri).crossfade(true)
+                        .build(),
                     contentDescription = "song_thumbnail",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
@@ -94,33 +101,27 @@ fun SongItem(
                 .weight(1f)
         ) {
             Text(
-                text = song.name?:"",
+                text = song.name ?: "",
                 style = MaterialTheme.typography.titleMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (isDownloaded) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_download),
-                        contentDescription = "downloaded_icon",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-                Text(
-                    text = song.artists?.joinToString(", ") ?: "",
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
+            Text(
+                text = song.artists?.joinToString(", ") ?: "",
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
         }
-        IconButton(onClick = onFavoriteClick) {
+        IconButton(onClick = {
+            favoriteViewModel.toggleFavorite("songs",song.id)
+            isFavorite = !isFavorite
+        }) {
             Icon(
-                painter = painterResource(id = favoriteIconId),
+                painter = painterResource(id = if (isFavorite) R.drawable.ic_favorite_filled else R.drawable.ic_favorite_outlined),
                 contentDescription = "favorite_icon",
-                tint = if (song.isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground
+                tint = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground
             )
         }
         Column {
@@ -162,21 +163,34 @@ fun SongItem(
                         isMenuExpanded = false
                     })
                 }
-                if (!isDownloaded) {
-                    DropdownMenuItem(text = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_download),
-                                contentDescription = "download_icon"
-                            )
-                            Text(text = "Download", modifier = Modifier.padding(start = 8.dp))
-                        }
-                    }, onClick = {
-                        onDownloadClick()
-                        isMenuExpanded = false
-                    })
-                }
+                DropdownMenuItem(text = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_download),
+                            contentDescription = "download_icon"
+                        )
+                        Text(text = "Download", modifier = Modifier.padding(start = 8.dp))
+                    }
+                }, onClick = {
+                    isMenuExpanded = false
+                    downloadSong(context, song)
+                })
             }
         }
+    }
+}
+
+private fun downloadSong(context: Context, song: Song){
+    Firebase.storage.reference.child(song.audio!!).downloadUrl.addOnSuccessListener { uri ->
+        context.getSystemService(DownloadManager::class.java).enqueue(
+            DownloadManager.Request(uri)
+                .setMimeType("audio/mpeg")
+                .setTitle(song.name + ".mp3")
+                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                .setDestinationInExternalPublicDir(
+                    Environment.DIRECTORY_MUSIC,
+                    song.name + ".mp3"
+                )
+        )
     }
 }

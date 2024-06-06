@@ -2,7 +2,6 @@ package com.example.musicapp.ui.navigation
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,12 +19,11 @@ import com.example.musicapp.ui.screens.AlbumDetailScreen
 import com.example.musicapp.ui.screens.AlbumListScreen
 import com.example.musicapp.ui.screens.ConcertDetailScreen
 import com.example.musicapp.ui.screens.ConcertListScreen
-import com.example.musicapp.ui.screens.DownloadScreen
 import com.example.musicapp.ui.screens.FavoriteScreen
 import com.example.musicapp.ui.screens.HomeScreen
 import com.example.musicapp.ui.screens.LoginScreen
 import com.example.musicapp.ui.screens.SongListScreen
-import com.example.musicapp.ui.screens.PlayListScreen
+import com.example.musicapp.ui.screens.PlaylistScreen
 import com.example.musicapp.ui.screens.PlayerScreen
 import com.example.musicapp.ui.screens.PlaylistDetailScreen
 import com.example.musicapp.ui.screens.RegisterScreen
@@ -84,23 +82,16 @@ fun NavigationGraph(
                     onNavigate = { navController.navigate(it.route) },
                     onNavigateWithArgument = { destination, id ->
                         navController.navigate("${destination.route}/$id")
+                    },
+                    onSongQueryChanged = {
+                        songQuery = it
                     }
                 )
                 isNavBarHavingScreen = true
             }
 
             composable(route = PlaylistDestination.route) {
-                PlayListScreen(
-                    onNavigate = { navController.navigate(it.route) },
-                    onNavigateWithArgument = { destination, id ->
-                        navController.navigate("${destination.route}/$id")
-                    }
-                )
-                isNavBarHavingScreen = true
-            }
-
-            composable(route = DownloadDestination.route) {
-                DownloadScreen(
+                PlaylistScreen(
                     onNavigate = { navController.navigate(it.route) },
                     onNavigateWithArgument = { destination, id ->
                         navController.navigate("${destination.route}/$id")
@@ -144,10 +135,14 @@ fun NavigationGraph(
 
             composable(route = SearchDestination.route) {
                 SearchScreen(
+                    onNavigate = { navController.navigate(it.route) },
                     onNavigateWithArgument = { destination, id ->
                         navController.navigate("${destination.route}/$id")
                     },
-                    onNavigateBack = { navController.navigateUp() }
+                    onNavigateBack = { navController.navigateUp() },
+                    onSongQueryChanged = {
+                        songQuery = it
+                    }
                 )
                 isNavBarHavingScreen = false
             }
@@ -163,7 +158,10 @@ fun NavigationGraph(
                     onNavigateWithArgument = { destination, id ->
                         navController.navigate("${destination.route}/$id")
                     },
-                    onNavigateBack = { navController.navigateUp() }
+                    onNavigateBack = { navController.navigateUp() },
+                    onSongQueryChanged = {
+                        songQuery = it
+                    }
                 )
                 isNavBarHavingScreen = false
             }
@@ -191,7 +189,10 @@ fun NavigationGraph(
                     onNavigateWithArgument = { destination, id ->
                         navController.navigate("${destination.route}/$id")
                     },
-                    onNavigateBack = { navController.navigateUp() }
+                    onNavigateBack = { navController.navigateUp() },
+                    onSongQueryChanged = {
+                        songQuery = it
+                    }
                 )
                 isNavBarHavingScreen = false
             }
@@ -201,7 +202,7 @@ fun NavigationGraph(
                 songQuery = songQuery,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = if (isNavBarHavingScreen) 82.dp else 0.dp)
+                    .padding(bottom = if (isNavBarHavingScreen) 106.dp else 24.dp)
             )
         }
     }

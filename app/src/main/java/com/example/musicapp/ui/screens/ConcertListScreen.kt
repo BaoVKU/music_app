@@ -21,6 +21,7 @@ fun ConcertListScreen(
             TopBar(
                 title = ConcertListDestination.title,
                 canNavigateBack = true,
+                hasActions = false,
                 onNavigateBack = onNavigateBack,
                 onNavigate = onNavigate
             )

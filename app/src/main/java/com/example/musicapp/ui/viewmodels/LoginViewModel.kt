@@ -34,9 +34,9 @@ class LoginViewModel : ViewModel() {
     var loginForm by mutableStateOf(LoginForm("blackgamerofficial123@gmail.com", "123456789"))
         private set
 
-//    init {
-//        login()
-//    }
+    init {
+        login()
+    }
 
     fun setEmail(email: String) {
         loginForm = loginForm.copy(email = email)
@@ -54,10 +54,10 @@ class LoginViewModel : ViewModel() {
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     _loginUiState.value = LoginUiState.Success
-                    Toast.makeText(context, "Login successful", Toast.LENGTH_SHORT).show()
+//                    Toast.makeText(context, "Login successful", Toast.LENGTH_SHORT).show()
                 } else {
                     _loginUiState.value = LoginUiState.Error(task.exception?.message ?: "An error occurred")
-                    Toast.makeText(context, "Login failed", Toast.LENGTH_SHORT).show()
+//                    Toast.makeText(context, "Login failed", Toast.LENGTH_SHORT).show()
                 }
                 Firebase.appCheck.installAppCheckProviderFactory(
                     PlayIntegrityAppCheckProviderFactory.getInstance()

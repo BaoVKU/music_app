@@ -8,21 +8,37 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.musicapp.ui.components.AlbumItem
 import com.example.musicapp.ui.components.BottomNavigationBar
 import com.example.musicapp.ui.components.SongItem
 import com.example.musicapp.ui.components.TopBar
 import com.example.musicapp.ui.navigation.FavoriteDestination
 import com.example.musicapp.ui.navigation.NavigationDestination
+import com.example.musicapp.ui.viewmodels.AlbumListUiState
+import com.example.musicapp.ui.viewmodels.FavoriteViewModel
+import com.example.musicapp.ui.viewmodels.SongListUiState
 
 @Composable
 fun FavoriteScreen(
     modifier: Modifier = Modifier,
     onNavigate: (NavigationDestination) -> Unit,
-    onNavigateWithArgument: (NavigationDestination, String) -> Unit
+    onNavigateWithArgument: (NavigationDestination, String) -> Unit,
+    onSongQueryChanged: (String) -> Unit,
+    favoriteViewModel: FavoriteViewModel = viewModel()
 ) {
+    val songListUiState by favoriteViewModel.songListUiState.collectAsState()
+    val albumListUiState by favoriteViewModel.albumListUiState.collectAsState()
+
+    LaunchedEffect(key1 = favoriteViewModel.reloadScreen) {
+        favoriteViewModel.initFavoriteScreen()
+    }
+
     Scaffold(
         topBar = {
             TopBar(title = FavoriteDestination.title, onNavigate = onNavigate)
@@ -44,11 +60,22 @@ fun FavoriteScreen(
                         text = "Album",
                         style = MaterialTheme.typography.titleLarge
                     )
-
-                    (1..5).forEach {
-                        AlbumItem(onNavigateWithArgument = onNavigateWithArgument)
+                    if (albumListUiState is AlbumListUiState.Success) {
+                        val albums = (albumListUiState as AlbumListUiState.Success).albums
+                        if (albums.isNotEmpty()) {
+                            albums.forEach { album ->
+                                AlbumItem(
+                                    album = album,
+                                    onNavigateWithArgument = onNavigateWithArgument
+                                )
+                            }
+                        } else {
+                            Text(
+                                text = "No album found",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
                     }
-
                 }
             }
             item {
@@ -57,16 +84,25 @@ fun FavoriteScreen(
                         text = "Song",
                         style = MaterialTheme.typography.titleLarge
                     )
-//                    (1..5).forEach {
-//                        SongItem(
-//                            songName = "Song name",
-//                            songArtist = "Artist name",
-//                            onNavigateWithArgument = onNavigateWithArgument
-//                        )
-//                    }
+                    if (songListUiState is SongListUiState.Success) {
+                        val songs = (songListUiState as SongListUiState.Success).songs
+                        if (songs.isNotEmpty()) {
+                            songs.forEach { song ->
+                                SongItem(
+                                    song = song,
+                                    onSongQueryChanged = onSongQueryChanged
+                                )
+                            }
+                        } else {
+                            Text(
+                                text = "No song found",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
                 }
-            }
 
+            }
         }
     }
 }

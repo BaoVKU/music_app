@@ -30,11 +30,6 @@ object PlaylistDestination : NavigationDestination {
     override val title: String = "Playlist"
 }
 
-object DownloadDestination : NavigationDestination {
-    override val route: String = "download"
-    override val title: String = "Download"
-}
-
 object ConcertListDestination : NavigationDestination {
     override val route: String = "concert"
     override val title: String = "Concert"

@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.example.musicapp.ui.theme.MusicAppTheme
 import com.google.firebase.Firebase
 import com.google.firebase.appcheck.AppCheckProvider
@@ -33,6 +35,11 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+
+        //change system bar color
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        val controller = WindowInsetsControllerCompat(window, window.decorView)
+        controller.isAppearanceLightStatusBars = false
     }
 }
 

@@ -101,7 +101,7 @@ fun HomeScreen(
                                     item = song,
                                     context = context,
                                     modifier = Modifier.clickable {
-                                        onSongQueryChanged("song="+song.id+"&album=d62VpWXgpJmefBy8c4w5")
+                                        onSongQueryChanged("song="+song.id)
                                     })
                             }
                         }
@@ -123,7 +123,7 @@ fun HomeScreen(
                                     modifier = Modifier.clickable {
                                         onNavigateWithArgument(
                                             AlbumDetailDestination,
-                                            "id"
+                                            album.id!!
                                         )
                                     })
                             }
@@ -145,7 +145,7 @@ fun HomeScreen(
                                     modifier = Modifier.clickable {
                                         onNavigateWithArgument(
                                             ConcertDetailDestination,
-                                            "id"
+                                            concert.id!!
                                         )
                                     })
                             }

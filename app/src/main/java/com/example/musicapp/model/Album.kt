@@ -5,4 +5,5 @@ data class Album(
     val name: String? = null,
     val songs: List<String>? = null,
     val thumbnail: String? = null,
+    val isFavorite: Boolean = false
 )
