@@ -67,6 +67,7 @@ fun PlayerScreen(
     playerViewModel: PlayerViewModel = viewModel(),
     favoriteViewModel: FavoriteViewModel = viewModel()
 ) {
+
     LaunchedEffect(songQuery) {
         playerViewModel.initPlayer(songQuery)
     }
@@ -81,6 +82,10 @@ fun PlayerScreen(
 
     var currentSong by remember {
         mutableStateOf(Song())
+    }
+
+    var isFavorite by remember {
+        mutableStateOf(currentSong.isFavorite)
     }
 
     var playlist by remember(songQuery) {
@@ -245,9 +250,12 @@ fun PlayerScreen(
                         )
                     }
 
-                    PlayerHeader(song = currentSong, onFavoriteClick = {
-                        favoriteViewModel.toggleFavorite("songs", it)
-                    })
+                    PlayerHeader(song = currentSong,
+                        isFavorite = isFavorite,
+                        onFavoriteClick = {
+                            isFavorite = !isFavorite
+                            favoriteViewModel.toggleFavorite("songs", it)
+                        })
 
                     ExpandedAudioTrack(
                         duration = duration,
@@ -265,10 +273,12 @@ fun PlayerScreen(
 }
 
 @Composable
-fun PlayerHeader(song: Song, onFavoriteClick: (String) -> Unit, modifier: Modifier = Modifier) {
-    var isFavorite by remember {
-        mutableStateOf(song.isFavorite)
-    }
+fun PlayerHeader(
+    song: Song,
+    isFavorite: Boolean,
+    onFavoriteClick: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
     Row(
         modifier = modifier
             .fillMaxWidth(),
@@ -290,7 +300,6 @@ fun PlayerHeader(song: Song, onFavoriteClick: (String) -> Unit, modifier: Modifi
             )
         }
         IconButton(onClick = {
-            isFavorite = !isFavorite
             onFavoriteClick(song.id)
         }) {
             Icon(
