@@ -6,12 +6,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 data class RegisterForm(
     val email: String,
@@ -57,6 +61,14 @@ class RegisterViewModel : ViewModel() {
                         _registerUiState.value = RegisterUiState.Success
                         Toast.makeText(context, "Registration successful", Toast.LENGTH_SHORT)
                             .show()
+                        viewModelScope.launch{
+                            val favorite = hashMapOf(
+                                "user_id" to Firebase.auth.currentUser?.uid,
+                                "albums" to emptyList<String>(),
+                                "songs" to emptyList<String>()
+                            )
+                            Firebase.firestore.collection("favorites").add(favorite).await()
+                        }
                     } else {
                         _registerUiState.value =
                             RegisterUiState.Error(task.exception?.message ?: "Registration failed")

@@ -87,12 +87,6 @@ class FavoriteViewModel : ViewModel() {
                 _songListUiState.value = SongListUiState.Success(songs ?: emptyList())
                 _albumListUiState.value = AlbumListUiState.Success(albums ?: emptyList())
             } else {
-                val favorite = hashMapOf(
-                    "user_id" to Firebase.auth.currentUser?.uid,
-                    "albums" to emptyList<String>(),
-                    "songs" to emptyList<String>()
-                )
-                database.collection("favorites").add(favorite).await()
                 _songListUiState.value = SongListUiState.Success(emptyList())
                 _albumListUiState.value = AlbumListUiState.Success(emptyList())
             }
@@ -132,13 +126,6 @@ class FavoriteViewModel : ViewModel() {
                         }
                     }
                 }
-            } else {
-                val favorite = hashMapOf(
-                    "user_id" to Firebase.auth.currentUser?.uid,
-                    "albums" to emptyList<String>(),
-                    "songs" to emptyList<String>()
-                )
-                database.collection("favorites").add(favorite).await()
             }
         }
     }
