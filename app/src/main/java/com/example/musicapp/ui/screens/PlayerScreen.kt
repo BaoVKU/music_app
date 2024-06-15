@@ -192,11 +192,9 @@ fun PlayerScreen(
             }
         }
 
-        LaunchedEffect(player) {
-            while (true) {
-                if (isAudioPlaying) {
-                    playbackPosition = player.currentPosition
-                }
+        LaunchedEffect(isAudioPlaying) {
+            while (isAudioPlaying) {
+                playbackPosition = player.currentPosition
                 delay(1000L)
             }
         }
