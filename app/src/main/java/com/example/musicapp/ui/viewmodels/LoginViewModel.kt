@@ -31,12 +31,8 @@ class LoginViewModel : ViewModel() {
     private var _loginUiState = MutableStateFlow<LoginUiState>(LoginUiState.Loading)
     val loginUiState: StateFlow<LoginUiState> = _loginUiState.asStateFlow()
 
-    var loginForm by mutableStateOf(LoginForm("blackgamerofficial123@gmail.com", "123456789"))
+    var loginForm by mutableStateOf(LoginForm("", ""))
         private set
-
-    init {
-        login()
-    }
 
     fun setEmail(email: String) {
         loginForm = loginForm.copy(email = email)
